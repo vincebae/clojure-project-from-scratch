@@ -1,0 +1,79 @@
+{:paths ["src" "resources"]
+
+ :deps
+ {org.clojure/clojure {:mvn/version "1.11.3"}}
+
+ ;; end of deps
+
+ :tasks
+ {:init (def MAIN-NS "sandbox.core")
+  :requires ([babashka.process :refer [process]])
+
+  run
+  {:doc "Run main function directly"
+   :override-builtin true
+   :task (do
+           (require [(symbol MAIN-NS)])
+           (apply
+            (ns-resolve (find-ns (symbol MAIN-NS))
+                        (symbol "-main"))
+            *command-line-args*))}
+
+  run-clj
+  {:doc "Run main function through clj"
+   :task (apply clojure (concat ["-M" "-m" MAIN-NS]
+                                *command-line-args*))}
+
+  run-uber
+  {:doc "Run uberjar through java"
+   :task (clojure "-T:build run-uber")}
+
+  nrepl
+  {:doc "Connect to nREPL"
+   :task (apply clojure ["-T:nrebel"
+                         ":port"
+                         (slurp ".nrepl-port")])}
+
+  nrepl-server
+  {:doc "start nREPL"
+   :override-builtin true
+   :task (clojure "-M:nrepl -m nrepl.cmdline")}
+
+  jar
+  {:doc "Build jar"
+   :task (clojure "-T:build jar")}
+
+  uberjar
+  {:doc "Build uberjar"
+   :override-builtin true
+   :task (clojure "-T:build uberjar")}
+
+  clean
+  {:doc "Clean"
+   :task (clojure "-T:build clean")}}
+
+ ;; end of tasks
+
+ :aliases
+ {;; Build tools
+  :build
+  {:deps {io.github.clojure/tools.build {:mvn/version "0.10.9"}
+          babashka/process {:mvn/version "0.6.23"}}
+   :ns-default build}
+
+  ;; nREPL server
+  :nrepl
+  {:extra-deps {nrepl/nrepl {:mvn/version "1.3.1"}}}
+
+  ;; nREPL client
+  :nrebel
+  {:extra-deps {com.bhauman/rebel-readline-nrepl {:mvn/version "0.1.5"}}
+   :exec-fn rebel-readline.nrepl/connect
+   :exec-args {:background-print false} ;; Optional configuration parameters
+   :main-opts ["-m" "rebel-readline.nrepl.main"]}}}
+
+
+
+
+
+
