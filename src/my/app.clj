@@ -1,4 +1,4 @@
-(ns sandbox.core
+(ns my.app
   (:require [clojure.string :as s])
   (:gen-class))
 

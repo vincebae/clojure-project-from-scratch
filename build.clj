@@ -2,7 +2,7 @@
   (:require [clojure.tools.build.api :as b]
             [babashka.process :refer [shell]]))
 
-(def lib 'sandbox/core)
+(def lib 'my/app)
 (def version "0.0.1")
 (def class-dir "target/classes")
 (def jar-file (format "target/%s-%s.jar" (name lib) version))
@@ -30,12 +30,12 @@
   (b/copy-dir {:src-dirs ["src" "resources"]
                :target-dir class-dir})
   (b/compile-clj {:basis @basis
-                  :ns-compile '[sandbox.core]
+                  :ns-compile '[my.app]
                   :class-dir class-dir})
   (b/uber {:class-dir class-dir
            :uber-file uber-file
            :basis @basis
-           :main 'sandbox.core}))
+           :main 'my.app}))
 
 (defn run-uber
   [opts]

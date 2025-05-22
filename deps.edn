@@ -7,7 +7,7 @@
  ;; end of deps
 
  :tasks
- {:init (def MAIN-NS "sandbox.core")
+ {:init (def MAIN-NS "my.app")
   :requires ([babashka.process :refer [process]])
 
   run
@@ -33,9 +33,9 @@
   ;; Run all tests
   ;; $ bb test
   ;; Run a specific namespace
-  ;; $ bb test -n SYMBOL  # e.g. sandbox.core-test
+  ;; $ bb test -n SYMBOL  # e.g. my.app-test
   ;; Run a specific test case
-  ;; $ bb test -v SYMBOL  # e.g. sandbox.core-test/greet-test
+  ;; $ bb test -v SYMBOL  # e.g. my.app-test/greet-test
   test
   {:doc "Run tests"
    :task (apply clojure "-M:test" *command-line-args*)}
