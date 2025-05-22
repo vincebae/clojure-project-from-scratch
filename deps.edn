@@ -22,12 +22,13 @@
 
   run-clj
   {:doc "Run main function through clj"
-   :task (apply clojure (concat ["-M" "-m" MAIN-NS]
-                                *command-line-args*))}
+   :task (apply clojure "-M -m" MAIN-NS *command-line-args*)}
 
   run-uber
-  {:doc "Run uberjar through java"
-   :task (clojure "-T:build run-uber")}
+  {:doc "Run uberjar"
+   :task (let [args *command-line-args*
+               opts (if (empty? args) [] [":args" (str args)])]
+           (apply clojure "-T:build run-uber" opts))}
 
   ;; Run all tests
   ;; $ bb test
@@ -37,31 +38,34 @@
   ;; $ bb test -v SYMBOL  # e.g. sandbox.core-test/greet-test
   test
   {:doc "Run tests"
-   :task (apply clojure (cons "-M:test" *command-line-args*))}
-
-  nrepl
-  {:doc "Connect to nREPL"
-   :task (apply clojure ["-T:nrebel"
-                         ":port"
-                         (slurp ".nrepl-port")])}
-
-  nrepl-server
-  {:doc "start nREPL"
-   :override-builtin true
-   :task (clojure "-M:nrepl -m nrepl.cmdline")}
+   :task (apply clojure "-M:test" *command-line-args*)}
 
   jar
   {:doc "Build jar"
    :task (clojure "-T:build jar")}
 
-  uberjar
+  uber
   {:doc "Build uberjar"
    :override-builtin true
    :task (clojure "-T:build uberjar")}
 
   clean
   {:doc "Clean"
-   :task (clojure "-T:build clean")}}
+   :task (clojure "-T:build clean")}
+
+  repl
+  {:doc "Start Rebel REPL"
+   :override-builtin true
+   :task (clojure "-T:rebel")}
+
+  nrepl
+  {:doc "Connect to nREPL"
+   :task (clojure "-T:nrebel :port" (slurp ".nrepl-port"))}
+
+  nrepl-server
+  {:doc "Start nREPL server"
+   :override-builtin true
+   :task (clojure "-M:nrepl -m nrepl.cmdline")}}
 
  ;; end of tasks
 
@@ -83,15 +87,17 @@
   :nrepl
   {:extra-deps {nrepl/nrepl {:mvn/version "1.3.1"}}}
 
-  ;; nREPL client
+  ;; Rebel REPL
+  :rebel
+  {:extra-deps {com.bhauman/rebel-readline-nrepl {:mvn/version "0.1.5"}}
+   :exec-fn rebel-readline.tool/repl
+   :exec-args {}
+   :main-opts ["-m" "rebel-readline.main"]}
+
+  ;; Rebel nREPL client
   :nrebel
   {:extra-deps {com.bhauman/rebel-readline-nrepl {:mvn/version "0.1.5"}}
    :exec-fn rebel-readline.nrepl/connect
    :exec-args {:background-print false} ;; Optional configuration parameters
    :main-opts ["-m" "rebel-readline.nrepl.main"]}}}
-
-
-
-
-
 

@@ -37,5 +37,6 @@
            :basis @basis
            :main 'sandbox.core}))
 
-(defn run-uber [_]
-  (shell "java -jar" uber-file))
+(defn run-uber
+  [opts]
+  (apply shell "java" "-jar" uber-file (:args opts)))
