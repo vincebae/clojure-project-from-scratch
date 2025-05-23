@@ -8,16 +8,15 @@
 
  :tasks
  {:init (def MAIN-NS "my.app")
-  :requires ([babashka.process :refer [process]])
 
+  ;; Unfortunately, it doesn't work with java library.
   run
   {:doc "Run main function directly"
    :override-builtin true
    :task (do
            (require [(symbol MAIN-NS)])
            (apply
-            (ns-resolve (find-ns (symbol MAIN-NS))
-                        (symbol "-main"))
+            (ns-resolve (find-ns (symbol MAIN-NS)) (symbol "-main"))
             *command-line-args*))}
 
   run-clj

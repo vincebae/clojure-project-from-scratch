@@ -78,22 +78,58 @@ Hello, Alice, Bob!
  :tasks 
  {:init (def MAIN-NS "my.app")
 
-  run
+  run-clj
   {:doc "Run main"
-   :override-builtin true
    :task (apply clojure "-M -m" MAIN-NS *command-line-args*)}}}
 ```
 
 #### Execute with Babashka
 ```
-$ bb run
+$ bb run-clj
 Hello, World!
 
-$ bb run Alice Bob
+$ bb run-clj Alice Bob
 Hello, Alice, Bob!
 ```
 
-## Build and run uberjar
+#### Execute from task directly
+
+Since babashka task is simply a clojure form, main function can be directly called.
+Execution in this way has much faster start-up time than using clojure CLI.
+However, it works only with native clojure codes,
+and if there are any java libraries used, execution will fail.
+
+```
+{
+ :tasks
+ {:init (def MAIN-NS "my.app")
+
+  run-bb
+  {:doc "Run main function directly"
+   :task (do
+           (require [(symbol MAIN-NS)])
+           (apply
+            (ns-resolve (find-ns (symbol MAIN-NS)) (symbol "-main"))
+            *command-line-args*))}}
+  ...
+}
+```
+
+Simple comparison between `run-clj` and `run-bb` execution time:
+```
+$ time bb run-clj Alice Bob
+Hello, Alice, Bob!
+        0:00.81 real,   1.46 user,      0.14 sys,       0 amem, 105960 mmem
+
+$ time bb run-bb Alice Bob    
+Hello, Alice, Bob!
+        0:00.01 real,   0.00 user,      0.00 sys,       0 amem, 41652 mmem
+```
+
+## Integration with tools.build
+
+We can build jar and uberjar using tools.build.
+Additionally, we can run any clojure codes through it.
 
 #### Add `build.clj`
 ```
@@ -108,12 +144,21 @@ Hello, Alice, Bob!
 ;; delay to defer side effects (artifact downloads)
 (def basis (delay (b/create-basis {:project "deps.edn"})))
 
-(defn clean 
-  [_]
+(defn clean [_]
   (b/delete {:path "target"}))
 
-(defn uber 
-  [_]
+(defn jar [_]
+  (b/write-pom {:class-dir class-dir
+                :lib lib
+                :version version
+                :basis @basis
+                :src-dirs ["src"]})
+  (b/copy-dir {:src-dirs ["src" "resources"]
+               :target-dir class-dir})
+  (b/jar {:class-dir class-dir
+          :jar-file jar-file}))
+
+(defn uber [_]
   (clean nil)
   (b/copy-dir {:src-dirs ["src" "resources"]
                :target-dir class-dir})
@@ -138,8 +183,16 @@ Hello, Alice, Bob!
 ```
 
 #### Build and execute uberjar
+
+`build.clj` file is accessed through `:build` alias, and it can be executed using clojure CLI, e.g.
+
 ```
+$ clj -T:build clean
+
+$ clj -T:build jar
+
 $ clj -T:build uber
+
 $ java -jar target/app-0.0.1-standalone.jar
 Hello, World!
 
@@ -148,6 +201,9 @@ Hello, Alice, Bob!
 ```
 
 #### Add `run-uber` to `build.clj`
+
+Additionally we can even run the uber-jar throught `build.clj` by adding these to `build.clj`.
+
 ```
 (ns build
   (:require [clojure.tools.build.api :as b]
@@ -155,8 +211,7 @@ Hello, Alice, Bob!
 
 ;; ...
 
-(defn run-uber
-  [opts]
+(defn run-uber [opts]
   (apply shell "java" "-jar" uber-file (:args opts)))
 ```
 
@@ -166,10 +221,22 @@ $ clj -T:build run-uber :args '["Alice" "Bob"]'
 ```
 
 #### Add babashka tasks to `deps.edn`
+
+The commands can be further simplied through babashka tasks:
+
 ```
 {
  :tasks 
- {uber
+ {
+  clean
+  {:doc "Clean"
+   :task (clojure "-T:build clean")}
+
+  jar
+  {:doc "Build jar"
+   :task (clojure "-T:build jar")}
+
+  uber
   {:doc "Build uberjar"
    :override-builtin true
    :task (clojure "-T:build uber")}
@@ -189,6 +256,8 @@ $ clj -T:build run-uber :args '["Alice" "Bob"]'
 
 #### Execute with Babashka
 ```
+$ bb clean
+$ bb jar
 $ bb uber
 $ bb run-uber
 Hello, World!
