@@ -385,3 +385,43 @@ Start nREPL client by
 ```
 $ bb nrepl
 ```
+
+## Dev mode
+
+Games can run in dev mode for easier REPL based development.
+This dev mode is inspired by 
+- [moon](https://github.com/damn/moon)
+- [Clojure Workflow Reloaded](https://www.cognitect.com/blog/2013/06/04/clojure-workflow-reloaded)
+
+Start dev mode using
+```
+$ bb dev
+```
+
+Workflow will be slightly different depending on the app type
+- Short running apps like CLI tools
+- Long running apps like server or UI app
+
+In both cases, [nREPL server](https://github.com/nrepl/nrepl) will be started with `.nrepl-port` file created.
+Any nREPL client can be used to interact with running app.
+`bb nrepl` can also be used to start a nREPL client
+
+### Short running apps
+- Once the nREPL server is started, the main thread will be block on a channel indefinitely.
+- The app can be controlled by `init!`, `start!`, `go`, `stop!`, and `refresh!`,
+  similarily described in "Clojure Workflow Reloaded"
+
+### Long running apps
+- Dev loop can be useful for this case.
+- To enable dev lopp, comment `(<!! dev-chan)` and uncomment `(start-dev-loop!)`
+  in the `-main` function in `dev.clj`.
+- After the nREPL server is started, the dev loop will call `go!`.
+- The app data will be stored to `dev/system` atom defined in `dev/dev.clj` file.
+- When the app is finished, dev loop will automatically tries to reload all the changes and restart the app. 
+- This can be triggered from REPL by evaluating `(dev/stop!)`
+- When there is any exception, app will print out the error and wait to be restarted
+- Once changes are made, app can be restarted from REPL by evaluating `(dev/restart!)`
+
+`user.clj` in the top level directory contains various useful forms for this process.
+
+

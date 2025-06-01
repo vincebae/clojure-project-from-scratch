@@ -1,15 +1,15 @@
 {:paths ["src" "resources"]
 
  :deps
- {org.clojure/clojure {:mvn/version "1.11.3"}
-  org.clojure/core.async {:mvn/version "1.3.610"}}
+ {metosin/malli {:mvn/version "0.18.0"}
+  org.clojure/clojure {:mvn/version "1.12.0"}
+  org.clojure/core.async {:mvn/version "1.8.741"}
+  org.clojure/core.match {:mvn/version "1.1.0"}}
 
  ;; end of deps
 
  :tasks
- {:init (def MAIN-NS "my.app")
-
-  ;; Unfortunately, it doesn't work with java library.
+ {;; Unfortunately, it doesn't work with java library.
   run
   {:doc "Run main function directly"
    :override-builtin true
@@ -28,6 +28,10 @@
    :task (let [args *command-line-args*
                opts (if (empty? args) [] [":args" (str args)])]
            (apply clojure "-T:build run-uber" opts))}
+
+  dev
+  {:doc "Run dev mode"
+   :task (apply clojure "-M:dev" *command-line-args*)}
 
   ;; Run all tests
   ;; $ bb test
@@ -74,6 +78,18 @@
   {:deps {io.github.clojure/tools.build {:mvn/version "0.10.9"}
           babashka/process {:mvn/version "0.6.23"}}
    :ns-default build}
+ 
+  ;; Prod environment
+  :prod
+  {:main-opts ["-m" "my.app"]}
+
+  ;; Dev environment
+  :dev
+  {:extra-paths ["dev"]
+   :extra-deps {nrepl/nrepl {:mvn/version "1.3.1"}
+                org.clj-commons/pretty {:mvn/version "3.3.2"}
+                org.clojure/tools.namespace {:mvn/version "1.5.0"}}
+   :main-opts ["-m" "dev"]}
 
   ;; Test runner
   :test

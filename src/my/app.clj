@@ -2,10 +2,26 @@
   (:require [clojure.string :as s])
   (:gen-class))
 
-(defn greet [xs]
+(defn greet
+  [xs]
   (if (empty? xs)
-    "Hello, World!"
+    "Hello, World",
     (str "Hello, " (s/join ", " xs) "!")))
 
-(defn -main [& args]
-  (println (greet args)))
+(defn init
+  [args]
+  (println "Init.")
+  args)
+
+(defn start
+  [system]
+  (println "Start.")
+  (println (greet system)))
+
+(defn stop
+  [system]
+  (println "Stop."))
+
+(defn -main
+  [& args]
+  (start (init args)))
