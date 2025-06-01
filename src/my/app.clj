@@ -5,7 +5,7 @@
 (defn greet
   [xs]
   (if (empty? xs)
-    "Hello, World",
+    "Hello, World!",
     (str "Hello, " (s/join ", " xs) "!")))
 
 (defn init
