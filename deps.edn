@@ -9,7 +9,9 @@
  ;; end of deps
 
  :tasks
- {;; Unfortunately, it doesn't work with java library.
+ {:init (def MAIN-NS "my.app")
+
+  ;; Unfortunately, it doesn't work with java library.
   run
   {:doc "Run main function directly"
    :override-builtin true
