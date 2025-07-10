@@ -1,0 +1,17 @@
+{:deps true
+
+ :nrepl {:write-port-file true}
+
+ :build-defaults
+ {:build-hooks [(shadow-git-inject.core/hook)]}
+
+ :dev-http
+ {8000 "resources/public"}
+
+ :builds
+ {:client
+  {:target     :browser
+   :output-dir "resources/public/js"
+   :modules
+   {:client
+    {:init-fn my.app/-main}}}}}
