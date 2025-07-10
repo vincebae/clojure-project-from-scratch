@@ -1,0 +1,112 @@
+{:paths ["src" "resources"]
+
+ :deps
+ {metosin/malli {:mvn/version "0.18.0"}
+  org.clojure/clojure {:mvn/version "1.12.0"}
+  org.clojure/core.async {:mvn/version "1.8.741"}
+  org.clojure/core.match {:mvn/version "1.1.0"}
+  cljfx/cljfx {:mvn/version "1.9.5"}}
+
+ ;; end of deps
+
+ :tasks
+ {:init (def MAIN-NS "my.app")
+
+  run
+  {:doc "Run main function through clj"
+   :override-builtin true
+   :task (apply clojure "-M -m" MAIN-NS *command-line-args*)}
+
+  run-uber
+  {:doc "Run uberjar"
+   :task (let [args *command-line-args*
+               opts (if (empty? args) [] [":args" (str args)])]
+           (apply clojure "-T:build run-uber" opts))}
+
+  dev
+  {:doc "Run dev mode"
+   :task (apply clojure "-M:dev" *command-line-args*)}
+
+  ;; Run all tests
+  ;; $ bb test
+  ;; Run a specific namespace
+  ;; $ bb test -n SYMBOL  # e.g. my.app-test
+  ;; Run a specific test case
+  ;; $ bb test -v SYMBOL  # e.g. my.app-test/greet-test
+  test
+  {:doc "Run tests"
+   :task (apply clojure "-M:test" *command-line-args*)}
+
+  jar
+  {:doc "Build jar"
+   :task (clojure "-T:build jar")}
+
+  uber
+  {:doc "Build uberjar"
+   :override-builtin true
+   :task (clojure "-T:build uberjar")}
+
+  clean
+  {:doc "Clean"
+   :task (clojure "-T:build clean")}
+
+  repl
+  {:doc "Start Rebel REPL"
+   :override-builtin true
+   :task (clojure "-T:rebel")}
+
+  nrepl
+  {:doc "Connect to nREPL"
+   :task (clojure "-T:nrebel :port" (slurp ".nrepl-port"))}
+
+  nrepl-server
+  {:doc "Start nREPL server"
+   :override-builtin true
+   :task (clojure "-M:nrepl -m nrepl.cmdline")}}
+
+ ;; end of tasks
+
+ :aliases
+ {;; Build tools
+  :build
+  {:deps {io.github.clojure/tools.build {:mvn/version "0.10.9"}
+          babashka/process {:mvn/version "0.6.23"}}
+   :ns-default build}
+ 
+  ;; Prod environment
+  :prod
+  {:main-opts ["-m" "my.app"]}
+
+  ;; Dev environment
+  :dev
+  {:extra-paths ["dev"]
+   :extra-deps {nrepl/nrepl {:mvn/version "1.3.1"}
+                org.clj-commons/pretty {:mvn/version "3.3.2"}
+                org.clojure/tools.namespace {:mvn/version "1.5.0"}}
+   :main-opts ["-m" "dev"]}
+
+  ;; Test runner
+  :test
+  {:extra-paths ["test"]
+   :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+   :main-opts ["-m" "cognitect.test-runner"]
+   :exec-fn cognitect.test-runner.api/test}
+
+  ;; nREPL server
+  :nrepl
+  {:extra-deps {nrepl/nrepl {:mvn/version "1.3.1"}}}
+
+  ;; Rebel REPL
+  :rebel
+  {:extra-deps {com.bhauman/rebel-readline-nrepl {:mvn/version "0.1.5"}}
+   :exec-fn rebel-readline.tool/repl
+   :exec-args {}
+   :main-opts ["-m" "rebel-readline.main"]}
+
+  ;; Rebel nREPL client
+  :nrebel
+  {:extra-deps {com.bhauman/rebel-readline-nrepl {:mvn/version "0.1.5"}}
+   :exec-fn rebel-readline.nrepl/connect
+   :exec-args {:background-print false} ;; Optional configuration parameters
+   :main-opts ["-m" "rebel-readline.nrepl.main"]}}}
+
