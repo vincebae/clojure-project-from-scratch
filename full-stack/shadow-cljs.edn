@@ -1,0 +1,21 @@
+{:deps true
+
+ :nrepl {:write-port-file true}
+
+ :build-defaults
+ {:build-hooks [(shadow-git-inject.core/hook)]}
+
+ :builds
+ {:app {:target :browser
+        :output-dir "resources/public/js"
+        :asset-path "/js"
+        :modules {:main {:init-fn my.frontend/init!
+                         :preloads [day8.re-frame-10x.preload]}}
+
+        ;; We'll serve index.html from our Ring server,
+        ;; but this is useful to run shadow-cljs's dev server
+        ;; independently.
+        :devtools {:http-root "resources/public"
+                   :http-port 8280
+                   ;; For hot reloading
+                   :after-load my.frontend/re-render}}}}
